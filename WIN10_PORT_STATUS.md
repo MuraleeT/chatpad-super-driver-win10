@@ -23,6 +23,11 @@ Windows 10 machine. The crash is therefore in the filter's runtime request,
 power, cancellation, or device-removal behavior, not package signing or INF
 selection.
 
+A separate community report claims that deleting and reinstalling the legacy
+drivers restored keyboard input on one Windows 10 x64 system, with rumble still
+unsupported. This is not evidence of compatibility and does not override the
+reproduced blue screen in this workspace.
+
 Do not reinstall the filter on the physical machine until the crash is analyzed
 in a VM or from a kernel crash dump. The keyboard and mouse packages should stay
 uninstalled during filter debugging.

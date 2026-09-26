@@ -42,3 +42,26 @@ machine. Treat the legacy driver as a protocol reference and investigate:
 
 User-mode parsing keeps malformed packets and state-machine bugs from causing a
 system-wide kernel bug check.
+
+## Historical Windows 10 Report
+
+A community report described a 64-bit Windows 10 installation where the
+Chatpad backlight worked but keyboard input did not. Removing and reinstalling
+the drivers reportedly restored typing; rumble reportedly remained unsupported.
+This is an anecdotal result and was not reproduced here. It does not establish
+that the legacy kernel filter is safe on current Windows 10 builds; this
+workspace's rebuilt filter still caused a blue screen during reboot testing.
+
+The report used driver-signature workarounds. The correctly spelled BCDEdit
+setting is:
+
+```bat
+bcdedit /set loadoptions DISABLE_INTEGRITY_CHECKS
+bcdedit /set testsigning on
+```
+
+`DDISABLE_INTEGRITY_CHECKS` is a typo. Do not add the integrity-checks
+workaround to the normal installation guide: Test Mode alone is preferable for
+controlled development, and neither setting makes an unsafe kernel driver
+compatible with Windows 10. Disable Test Mode and restore normal boot settings
+after testing.
