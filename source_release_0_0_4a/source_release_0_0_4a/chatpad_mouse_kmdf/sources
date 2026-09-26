@@ -1,0 +1,22 @@
+TARGETNAME=chatpad_mouse_kmdf
+TARGETTYPE=DRIVER
+
+KMDF_VERSION_MAJOR=1
+KMDF_VERSION_MINOR=9
+
+SOURCES=chatpad_mouse_kmdf.cpp      \
+
+INCLUDES=..\include
+
+# TODO:  What does the following do?
+!IFDEF WDF_ROOT
+!Include $(WDF_ROOT)\project.mk
+!ENDIF
+
+TARGETPATH=.
+TARGETLIBS=$(DDK_LIB_PATH)\hidclass.lib   \
+           $(DDK_LIB_PATH)\ntstrsafe.lib  \
+           $(DDK_LIB_PATH)\wdmsec.lib
+
+TARGET_DESTINATION=wdf
+

@@ -1,0 +1,22 @@
+MAJORCOMP=GAFBlizzard
+
+TARGETNAME=chatpad_installer
+TARGETPATH=.
+TARGETTYPE=PROGRAM
+TARGETLIBS=$(SDK_LIB_PATH)\setupapi.lib \
+
+UMTYPE=windows
+# TODO how does UMBASE work?  Is it needed?
+UMBASE=0x400000
+UMENTRY=winmain
+
+# Use multithreaded static libraries.
+USE_LIBCMT=1
+
+# TODO why doesn't it work to just include the uninstaller directory here?
+INCLUDES=..\include                                      \
+
+SOURCES=chatpad_installer.cpp                            \
+        uninstall_virtual_devices.cpp                    \
+        chatpad_installer.rc                             \
+

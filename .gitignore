@@ -1,0 +1,15 @@
+# Generated build output
+build/
+win10-test-package/
+*.pdb
+*.obj
+*.tlog
+*.lastbuildstate
+
+# Local signing material and archive metadata
+chatpad-test.cer
+.svn/
+.vs/
+
+# Generated driver catalogs
+*.cat

@@ -1,0 +1,14 @@
+TARGETNAME=chatpad_mouse
+TARGETTYPE=DRIVER
+
+KMDF_VERSION_MAJOR=1
+KMDF_VERSION_MINOR=9
+
+TARGETPATH=.
+TARGETLIBS=$(DDK_LIB_PATH)\hidclass.lib
+
+SOURCES=chatpad_mouse.c
+
+# TODO what does this specify?
+TARGET_DESTINATION=wdf
+

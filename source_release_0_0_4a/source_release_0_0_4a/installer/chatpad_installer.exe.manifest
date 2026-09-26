@@ -1,0 +1,18 @@
+<!-- This code was written by GAFBlizzard A.K.A. Blizzard A.K.A. AgentElrond and is copyright 2010. -->
+<!-- This code is released under the MIT license.  See LICENSE.TXT for details. -->
+<!-- This manifest is based on the following examples:
+  http://community.bartdesmet.net/blogs/bart/archive/2006/10/28/Windows-Vista-_2D00_-Demand-UAC-elevation-for-an-application-by-adding-a-manifest-using-mt.exe.aspx
+  http://www.codeproject.com/Articles/66259/Requesting-Admin-Approval-at-Application-Start.aspx
+  -->
+
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <assemblyIdentity version="1.0.0.0" name="chatpad_installer"/>
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+    <security>
+      <requestedPrivileges>
+        <requestedExecutionLevel level="requireAdministrator"/>
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+</assembly>

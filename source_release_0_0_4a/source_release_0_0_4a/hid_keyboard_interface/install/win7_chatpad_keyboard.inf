@@ -1,0 +1,134 @@
+;
+; Copyright (c) 2010 GAFBlizzard A.K.A. Blizzard A.K.A. AgentElrond
+;
+; Chatpad virtual keyboard driver.
+; This file is for Windows 7 only.
+;
+; This code is released under the MIT license.  See LICENSE.TXT for details.
+;
+
+; Based on INF from chatpad_filter and the hidusbfx2.inx example
+
+[Version]
+Signature="$Windows NT$"
+Class=HidClass
+ClassGuid={745a17a0-74d3-11d0-b6fe-00a0c90f57da}
+Provider=%ProviderName%
+; TODO see if it is easy to make a catalog file
+; CatalogFile=chatpad.cat
+; TODO make some sort of installer and uninstaller so I do not keep
+;      having to change the version etc. and leaving old drivers on disk?
+DriverVer=12/25/2010,1.0.1.2
+
+[SourceDisksFiles.ia64]
+chatpad_keyboard.sys       = 91
+chatpad_keyboard_kmdf.sys  = 91
+WdfCoInstaller01009.dll    = 91
+
+[SourceDisksFiles.amd64]
+chatpad_keyboard.sys       = 92
+chatpad_keyboard_kmdf.sys  = 92
+WdfCoInstaller01009.dll    = 92
+
+[SourceDisksFiles.x86]
+chatpad_keyboard.sys       = 93
+chatpad_keyboard_kmdf.sys  = 93
+WdfCoInstaller01009.dll    = 93
+
+[SourceDisksNames]
+91 = %MediaDescription1%,,,"\ia64"
+92 = %MediaDescription2%,,,"\amd64"
+93 = %MediaDescription3%,,,"\i386"
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[Manufacturer]
+%ProviderName%=Standard,NTx86,NTamd64,NTia64
+
+; For Windows 2000
+[Standard]
+; TODO is it okay to use HID\ here?  I thought I read some where that HID\ paths should be reserved
+;   for those that are automatically enumerated.  The vmulti INF file uses HID\ so I am doing the same.
+%ControllerDeviceName%=ChatpadKeyboardKMDF.Inst, HID\ChatpadKbd
+; TODO do I need to use the custom collection from the hidusbfx2 example?  Or at least provide a keyboard/mouse interface?
+;   (if so, it would need to be integrated into the rest of the INF file as well)
+
+[Standard.NTx86]
+%ControllerDeviceName%=ChatpadKeyboardKMDF.Inst, HID\ChatpadKbd
+
+[Standard.NTamd64]
+%ControllerDeviceName%=ChatpadKeyboardKMDF.Inst, HID\ChatpadKbd
+
+[Standard.NTia64]
+%ControllerDeviceName%=ChatpadKeyboardKMDF.Inst, HID\ChatpadKbd
+
+[ChatpadKeyboardKMDF.Inst.NT]
+; TODO do I need to worry about hidparse.sys and hidclass.sys, since Vista does not seem to have the layout.inf thing?
+CopyFiles = CopyFunctionDriver, CopyFilterDriver
+
+[ChatpadKeyboardKMDF.Inst.NT.HW]
+AddReg = ChatpadKeyboardKMDF_Parameters.AddReg
+
+[ChatpadKeyboardKMDF.Inst.NT.Services]
+AddService = ChatpadKeyboard,,ChatpadKeyboard_Service_Inst
+; TODO what does the 0x00000002 do?
+AddService = ChatpadKeyboardKMDF,0x00000002,ChatpadKeyboardKMDF_Service_Inst
+
+[ChatpadKeyboardKMDF_Parameters.AddReg]
+HKR,,"UpperFilters",0x00010000,"ChatpadKeyboard"
+
+[ChatpadKeyboard_Service_Inst]
+DisplayName    = %Chatpad_Keyboard_SvcDesc%
+ServiceType    = 1      ; SERVICE_KERNEL_DRIVER
+StartType      = 3      ; SERVICE_DEMAND_START
+ErrorControl   = 1      ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\chatpad_keyboard.sys
+LoadOrderGroup = PNP Filter
+
+[CopyFunctionDriver]
+chatpad_keyboard.sys
+
+[CopyFilterDriver]
+chatpad_keyboard_kmdf.sys
+
+[ChatpadKeyboardKMDF_Service_Inst]
+DisplayName    = %Chatpad_Keyboard_KMDF_SvcDesc%
+ServiceType    = 1      ; SERVICE_KERNEL_DRIVER
+StartType      = 3      ; SERVICE_DEMAND_START
+ErrorControl   = 0      ; SERVICE_ERROR_IGNORE
+ServiceBinary  = %12%\chatpad_keyboard_kmdf.sys
+
+; TODO do I need a custom collection install section here?
+
+; =================== WDF coinstaller section ===================
+[DestinationDirs]
+ChatpadKeyboardKMDF.Inst_CoInstaller_CopyFiles = 11
+
+[ChatpadKeyboardKMDF.Inst.NT.CoInstallers]
+AddReg = ChatpadKeyboardKMDF.Inst_CoInstaller_AddReg
+CopyFiles = ChatpadKeyboardKMDF.Inst_CoInstaller_CopyFiles
+
+[ChatpadKeyboardKMDF.Inst_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller01009.dll,WdfCoInstaller"
+
+[ChatpadKeyboardKMDF.Inst_CoInstaller_CopyFiles]
+WdfCoInstaller01009.dll,,,0x00000010   ; COPYFLG_NO_OVERWRITE (for win2k)
+
+[ChatpadKeyboardKMDF.Inst.NT.Wdf]
+KmdfService = ChatpadKeyboardKMDF, ChatpadKeyboardKMDF_wdfsect
+
+[ChatpadKeyboardKMDF_wdfsect]
+KmdfLibraryVersion=1.9
+
+; =================== Strings ===================
+
+[Strings]
+ProviderName="AgentElrond"
+Chatpad_Keyboard_SvcDesc="Chatpad HID Keyboard"
+Chatpad_Keyboard_KMDF_SvcDesc="Chatpad HID Keyboard KMDF Layer"
+MediaDescription1="XBox 360 Controller Chatpad Installation Media, ia64"
+MediaDescription2="XBox 360 Controller Chatpad Installation Media, amd64"
+MediaDescription3="XBox 360 Controller Chatpad Installation Media, x86"
+ControllerDeviceName="XBox 360 Controller HID Keyboard for Chatpad"
+
