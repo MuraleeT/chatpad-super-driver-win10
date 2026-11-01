@@ -130,6 +130,24 @@ C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe
 
 .NET and `dotnet add package` are not required. These are native WDK/MSBuild projects.
 
+The repository includes [`vm-setup.ps1`](./vm-setup.ps1) and
+[`run-vm-setup.cmd`](./run-vm-setup.cmd). If the repository is already on the
+VM desktop, open an Administrator PowerShell in that repository folder and run:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\vm-setup.ps1 -InstallPrerequisites
+```
+
+The default workspace is the script's own folder, so the existing desktop
+checkout is pulled rather than cloning a second copy. The script pulls the
+`win10-port` branch and builds all five x64 Debug
+projects. It never calls `pnputil`, creates a driver service, or loads a
+`.sys` file. The WDK installer remains a Microsoft prerequisite that may
+require an interactive install. Optional VM-only setup switches are
+`-CreateTestCertificate` and `-EnableTestSigning`; use those only after taking
+a clean snapshot.
+
 ## Build Commands
 
 Open a Developer Command Prompt for Visual Studio 2026, then build each project:
