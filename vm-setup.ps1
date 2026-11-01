@@ -102,14 +102,15 @@ function Get-MsBuild {
     if ($null -eq $found -or -not (Test-Path $found)) {
         throw "MSBuild was not found. Install Visual Studio 2026 with the Desktop C++ workload and rerun."
     }
-    $cppProps = Join-Path $installationPath "MSBuild\Microsoft\VC\v180\Microsoft.Cpp.Default.props"
-    if (-not (Test-Path $cppProps)) {
+    $cppProps = Get-ChildItem (Join-Path $installationPath "MSBuild\Microsoft\VC") -Filter "Microsoft.Cpp.Default.props" -File -Recurse -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($null -eq $cppProps) {
         throw "Visual Studio 2026 was found at $installationPath, but Microsoft.Cpp.Default.props is missing. Install the Desktop C++ workload."
     }
     return @{
         Path = $found
         InstallationPath = $installationPath
-        VcTargetsPath = (Join-Path $installationPath "MSBuild\Microsoft\VC\v180")
+        VcTargetsPath = $cppProps.DirectoryName
     }
 }
 
