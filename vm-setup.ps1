@@ -50,8 +50,7 @@ function Install-DevelopmentTools {
             "--includeRecommended",
             "--add", "Microsoft.VisualStudio.Component.Windows10SDK.28000",
             "--quiet",
-            "--norestart",
-            "--wait"
+            "--norestart"
         )
     }
     else {
