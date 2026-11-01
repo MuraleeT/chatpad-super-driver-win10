@@ -110,6 +110,8 @@ typedef struct _DEVICE_CONTEXT
    // Whether we have finished initializing the chatpad successfully.
    // TODO eventually remove chatpadInitFinished if is not used and needed
    BOOLEAN                       chatpadInitFinished;
+   // Prevent completion callbacks from resubmitting reads during teardown.
+   volatile LONG                 ioStopping;
    // The current filter mode.  This value must be one of the FILTER_MODE_ constants.
    ULONG                         filterMode;
    // Whether the controls continuous reader is started.
@@ -219,6 +221,8 @@ ChatpadFilterEvtDeviceAdd(
   IN WDFDRIVER       driver,
   IN PWDFDEVICE_INIT deviceInit);
 
+EVT_WDF_DEVICE_RELEASE_HARDWARE ChatpadFilterEvtReleaseHardware;
+
 NTSTATUS
 ChatpadCreateControlDevice(
   WDFDEVICE device);
@@ -278,4 +282,3 @@ ChatpadFilterWriteHandler(
   IN size_t       length);
 
 #endif // CHATPAD_FILTER_H
-

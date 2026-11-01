@@ -166,6 +166,26 @@ ChatpadFilterEvtPrepareHardware(
    return retStatus;
 } // end ChatpadFilterEvtPrepareHardware
 
+NTSTATUS
+ChatpadFilterEvtReleaseHardware(
+  IN WDFDEVICE wdfDevice,
+  IN WDFCMRESLIST resourcesTranslated)
+{
+   PDEVICE_CONTEXT devContext = ChatpadFilterGetDeviceContext(wdfDevice);
+
+   if(NULL == devContext)
+   {
+      return STATUS_INTERNAL_ERROR;
+   }
+
+   InterlockedExchange(&devContext->ioStopping, TRUE);
+   WdfIoTargetStop(
+     devContext->targetForRequests,
+     WdfIoTargetCancelSentIo);
+
+   return STATUS_SUCCESS;
+} // end ChatpadFilterEvtReleaseHardware
+
 EVT_WDF_DEVICE_QUERY_REMOVE ChatpadFilterEvtQueryRemove;
 
 NTSTATUS
@@ -184,7 +204,14 @@ VOID
 ChatpadFilterEvtSurpriseRemoval(
   IN WDFDEVICE wdfDevice)
 {
+   PDEVICE_CONTEXT devContext = ChatpadFilterGetDeviceContext(wdfDevice);
+
    ChatpadTrace(("ChatpadFilterEvtSurpriseRemoval called with IRQL %u\n", KeGetCurrentIrql()));
+
+   if(NULL != devContext)
+   {
+      InterlockedExchange(&devContext->ioStopping, TRUE);
+   }
 } // end ChatpadFilterEvtSurpriseRemoval
 
 EVT_WDF_DEVICE_D0_ENTRY ChatpadFilterD0Entry;
@@ -202,6 +229,7 @@ ChatpadFilterD0Entry(
    if(NULL != devContext)
    {
       ChatpadTrace(("D0 entry occurred.\n"));
+      InterlockedExchange(&devContext->ioStopping, FALSE);
 
       // TODO is this safe?  Are there any synchronizations problem with using the below lines?
       WdfWaitLockAcquire(chatpadDeviceCollectionLock, NULL);
@@ -234,6 +262,7 @@ ChatpadFilterD0Exit(
    if(NULL != devContext)
    {
       ChatpadTrace(("D0 exit occurred.\n"));
+      InterlockedExchange(&devContext->ioStopping, TRUE);
    }
    else
    {
@@ -285,6 +314,7 @@ ChatpadFilterEvtDeviceAdd(
       // Register a prepare hardware callback to create a WDF USB device object.
       WDF_PNPPOWER_EVENT_CALLBACKS_INIT(&powerCallbacks);
       powerCallbacks.EvtDevicePrepareHardware = ChatpadFilterEvtPrepareHardware;
+      powerCallbacks.EvtDeviceReleaseHardware = ChatpadFilterEvtReleaseHardware;
       powerCallbacks.EvtDeviceD0Entry = ChatpadFilterD0Entry;
       powerCallbacks.EvtDeviceD0Exit = ChatpadFilterD0Exit;
       powerCallbacks.EvtDeviceSurpriseRemoval = ChatpadFilterEvtSurpriseRemoval;
@@ -330,6 +360,7 @@ ChatpadFilterEvtDeviceAdd(
          devContext->usbConfigSelected = FALSE;
          devContext->msInitFinished = FALSE;
          devContext->chatpadInitFinished = FALSE;
+         devContext->ioStopping = FALSE;
          // Filter initially until the Microsoft driver controller init is finished.
          devContext->filterMode = FILTER_MODE_FILTERED;
          devContext->numInterfaces = 0;
@@ -863,6 +894,11 @@ NTSTATUS SendControlsReadRequest(
    NTSTATUS                   retStatus      = STATUS_SUCCESS;
    WDF_REQUEST_SEND_OPTIONS   sendOptions;
 
+   if(0 != InterlockedCompareExchange(&devContext->ioStopping, 0, 0))
+   {
+      return STATUS_DELETE_PENDING;
+   }
+
    RtlFillMemory(WdfMemoryGetBuffer(devContext->controlsReadBufferMemory[requestIndex], NULL),
                  0x00,
                  CONTROLS_READ_BUFFER_LENGTH);
@@ -935,7 +971,8 @@ NTSTATUS SendControlsReadRequest(
         devContext);
 
       // Send the request.
-      if(WdfRequestSend(devContext->controlsReadRequests[requestIndex],
+      if((0 == InterlockedCompareExchange(&devContext->ioStopping, 0, 0)) &&
+         WdfRequestSend(devContext->controlsReadRequests[requestIndex],
                         devContext->targetForRequests,
                         WDF_NO_SEND_OPTIONS))
       {
@@ -974,6 +1011,11 @@ NTSTATUS SendChatpadReadRequest(
   IN ULONG           requestIndex)
 {
    NTSTATUS retStatus = STATUS_SUCCESS;
+
+   if(0 != InterlockedCompareExchange(&devContext->ioStopping, 0, 0))
+   {
+      return STATUS_DELETE_PENDING;
+   }
 
    RtlFillMemory(WdfMemoryGetBuffer(devContext->chatpadReadBufferMemory[requestIndex], NULL),
                  0x00,
@@ -1042,7 +1084,8 @@ NTSTATUS SendChatpadReadRequest(
         devContext);
 
       // Send the request.
-      if(WdfRequestSend(devContext->chatpadReadRequests[requestIndex],
+      if((0 == InterlockedCompareExchange(&devContext->ioStopping, 0, 0)) &&
+         WdfRequestSend(devContext->chatpadReadRequests[requestIndex],
                         devContext->targetForRequests,
                         WDF_NO_SEND_OPTIONS))
       {
@@ -1780,7 +1823,8 @@ ControlsReadCompletion(
    // will simply be forwarded on in that case and we do not want to use proxy requests.
    if((FILTER_MODE_UNFILTERED != devContext->filterMode)       &&
       (CHATPAD_MAX_NUM_PENDING_USB_REQUESTS != requestIndex)   &&
-      (FALSE == wasRequestCancelled))
+      (FALSE == wasRequestCancelled)                           &&
+      (0 == InterlockedCompareExchange(&devContext->ioStopping, 0, 0)))
    {
       // Note that the request is only sent if the original request is not
       // cancelled.  Otherwise, the system crashes when the controller is
@@ -2015,7 +2059,8 @@ ChatpadReadCompletion(
    // driver completes the request synchronously.
    // UPDATE:  According to Tim Roberts this should be okay, it seems.
    if((CHATPAD_MAX_NUM_PENDING_USB_REQUESTS != requestIndex) &&
-      (FALSE == wasRequestCancelled))
+      (FALSE == wasRequestCancelled) &&
+      (0 == InterlockedCompareExchange(&devContext->ioStopping, 0, 0)))
    {
       // Note that the request is only sent if the original request is not
       // cancelled.  Otherwise, the system crashes when the controller is
@@ -3280,4 +3325,3 @@ ChatpadTrace(("TODO NEXT implement setting controls mappings.\n"));
 
    return;
 } // end ChatpadFilterIOCTLHandler
-

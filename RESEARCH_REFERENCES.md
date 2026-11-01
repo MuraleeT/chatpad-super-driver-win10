@@ -25,8 +25,9 @@ These references were identified during the Windows 10 port investigation.
   - Community-maintained xone-related reference.
 
 The xone repositories target Xbox One/Series GIP hardware and are not a direct
-implementation for this Xbox 360 USB controller. They may still clarify the
-difference between the 360 accessory bus and later GIP multiplexing.
+implementation for this Xbox 360 USB controller. They clarify that the later
+driver has a distinct transport and device lifecycle, but its protocol and
+driver basis must not be mixed into this 360 USB filter.
 
 ## Recommended Next Architecture
 

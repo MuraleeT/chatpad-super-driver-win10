@@ -91,11 +91,17 @@ The port contains these changes:
 - Replaced raw IRP stack pointer arithmetic with `IoGetNextIrpStackLocation`.
 - Replaced `ExAllocatePoolWithTag` wrappers with `ExAllocatePool2` using non-paged pool.
 - Changed filter device-add to return its real initialization status instead of always returning success.
+- Added filter teardown handling that marks I/O as stopping, cancels sent
+  lower-target requests in `EvtDeviceReleaseHardware`, and prevents cancelled
+  read completions from resubmitting USB requests.
 - Added Windows 10 INF sections.
 - Added catalog declarations.
 - Updated the rebuilt filter `DriverVer` to `09/26/2026,1.0.1.5`.
 
-These changes are not sufficient to prove runtime safety. The next debugging target is the filter's request lifecycle and power/remove handling.
+These changes are not sufficient to prove runtime safety. The next debugging
+target is VM-only Driver Verifier validation of the filter's request lifecycle
+and power/remove handling. No driver was installed or loaded on the host while
+making this change.
 
 ## Toolchain
 
@@ -262,4 +268,9 @@ Never guess the `oem###.inf` number on a different VM; enumerate it first.
 
 ## Current Stop Point
 
-The personal GitHub branch contains the source port and documentation, but no driver package is considered safe for normal Windows 10 use. The next session should start with a VM snapshot and crash-dump instrumentation, not another physical-machine installation.
+The personal GitHub branch contains the source port and documentation, but no
+driver package is considered safe for normal Windows 10 use. The Xbox One
+`xone` implementation was reviewed and is not a replacement basis because it
+uses Xbox One/Series GIP rather than the Xbox 360 USB accessory protocol. The
+next session should start with a VM snapshot and crash-dump instrumentation,
+not another physical-machine installation.

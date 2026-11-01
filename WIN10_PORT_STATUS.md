@@ -15,6 +15,9 @@ The upstream project was published on Google Code and targeted Windows 7/KMDF
 - Replaced `ExAllocatePoolWithTag` wrappers with `ExAllocatePool2`.
 - Changed the filter device-add path to return real initialization failures.
 - Generated and verified Windows 10 test catalogs.
+- Added teardown protection to stop the filter I/O target before cached USB
+  resources are released, and prevent cancelled read completions from
+  resubmitting requests during power-down or removal.
 
 ## Current Blocker
 
@@ -40,3 +43,8 @@ uninstalled during filter debugging.
 4. Analyze the dump in WinDbg, focusing on URB completion, request reuse,
    `D0Exit`, surprise removal, and control-device lifetime.
 5. Rebuild and repeat before packaging a keyboard-only release.
+
+The Xbox One `xone` Chatpad implementation is not a suitable code base for
+this driver: it handles Xbox One/Series GIP framing, while this project
+handles the Xbox 360 USB accessory interfaces.  It is useful only as a
+lifecycle reference; protocol parsing and transport must remain separate.
