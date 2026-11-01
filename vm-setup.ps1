@@ -9,7 +9,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$ExpectedWdkVersion = "10.0.28000.0"
+$WdkVersion = $null
 $RepoRoot = $Workspace
 $SourceRoot = Join-Path $RepoRoot "source_release_0_0_4a\source_release_0_0_4a"
 
@@ -77,12 +77,22 @@ function Get-MsBuild {
     return $found
 }
 
-function Test-Wdk {
-    $wdkRoot = "${env:ProgramFiles(x86)}\Windows Kits\10\build\$ExpectedWdkVersion"
-    $required = Join-Path $wdkRoot "WindowsDriver.Common.targets"
-    if (-not (Test-Path $required)) {
-        throw "The required WDK target is missing: $required`nInstall WDK $ExpectedWdkVersion, or update all project WDK version properties together after choosing another installed version."
+function Get-WdkVersion {
+    $buildRoot = "${env:ProgramFiles(x86)}\Windows Kits\10\build"
+    if (-not (Test-Path $buildRoot)) {
+        throw "The WDK build directory was not found: $buildRoot"
     }
+
+    $versions = @(Get-ChildItem $buildRoot -Directory |
+        Sort-Object Name -Descending |
+        Where-Object {
+            (Test-Path (Join-Path $_.FullName "WindowsDriver.KernelMode.props")) -and
+            (Test-Path (Join-Path $_.FullName "WindowsDriver.Common.targets"))
+        })
+    if ($null -eq $versions -or $versions.Count -eq 0) {
+        throw "No complete WDK installation was found under $buildRoot. Install the WDK with Visual Studio integration."
+    }
+    return $versions[0].Name
 }
 
 function Sync-Repository {
@@ -108,7 +118,8 @@ function Sync-Repository {
 function Build-Drivers {
     Write-Step "Building drivers (no installation or loading)"
     $msbuild = Get-MsBuild
-    Test-Wdk
+    $WdkVersion = Get-WdkVersion
+    Write-Host "Using installed WDK build folder: $WdkVersion"
     $projects = @(
         "filter\chatpad_filter.vcxproj",
         "chatpad_keyboard_kmdf\chatpad_keyboard_kmdf.vcxproj",
@@ -122,6 +133,8 @@ function Build-Drivers {
             Invoke-External $msbuild @(
                 $project, "/m", "/t:Build",
                 "/p:Configuration=Debug", "/p:Platform=x64",
+                "/p:WDKBuildFolder=$WdkVersion",
+                "/p:WindowsTargetPlatformVersion=$WdkVersion",
                 "/nologo"
             )
         }
