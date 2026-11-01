@@ -62,7 +62,7 @@ function Get-MsBuild {
     $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
     $found = $null
     if (Test-Path $vswhere) {
-        $installation = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+        $installation = & $vswhere -version "[18.0,19.0)" -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
         if ($installation) {
             $found = Join-Path $installation "MSBuild\Current\Bin\MSBuild.exe"
         }
@@ -74,7 +74,8 @@ function Get-MsBuild {
             "$env:ProgramFiles\Microsoft Visual Studio\2026\Enterprise\MSBuild\Current\Bin\MSBuild.exe",
             "$env:ProgramFiles\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe",
             "$env:ProgramFiles\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe",
-            "$env:ProgramFiles\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
+            "$env:ProgramFiles\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe",
+            "D:\Visual Studio 2026\18\Community\MSBuild\Current\Bin\MSBuild.exe"
         )
         $found = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
     }
