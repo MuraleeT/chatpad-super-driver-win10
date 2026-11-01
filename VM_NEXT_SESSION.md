@@ -163,6 +163,10 @@ MSBuild instance.
 The VM's winget catalog identifies Visual Studio 2026 Community as
 `Microsoft.VisualStudio.Community` (version 18.11.3). Use that exact ID; do
 not use the nonexistent `Microsoft.VisualStudio.Community.2026` identifier.
+If the script reports that `Microsoft.Cpp.Default.props` is missing, the
+Visual C++ workload is not installed. Run the setup with
+`-InstallPrerequisites`; it uses the verified Community package ID and adds
+the native Visual C++ workload before retrying the build.
 
 ## Build Commands
 
