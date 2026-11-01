@@ -49,7 +49,8 @@ function Install-DevelopmentTools {
             "--add", "Microsoft.VisualStudio.Workload.NativeDesktop",
             "--includeRecommended",
             "--quiet",
-            "--norestart"
+            "--norestart",
+            "--noUpdateInstaller"
         )
     }
     else {
@@ -60,7 +61,7 @@ function Install-DevelopmentTools {
         Invoke-External "winget" @(
             "install", "--id", "Microsoft.VisualStudio.Community",
             "--exact", "--accept-source-agreements", "--accept-package-agreements",
-            "--override", "--wait --passive --norestart --add Microsoft.VisualStudio.Workload.NativeDesktop --includeRecommended"
+            "--override", "--wait --passive --norestart --add Microsoft.VisualStudio.Workload.NativeDesktop --includeRecommended --noUpdateInstaller"
         )
     }
 
