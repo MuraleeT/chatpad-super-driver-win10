@@ -95,7 +95,7 @@ function Get-WdkInfo {
     }
     return @{
         Version = $versions[0].Name
-        ContentRoot = "${env:ProgramFiles(x86)}\Windows Kits\10\"
+        ContentRoot = ("${env:ProgramFiles(x86)}\Windows Kits\10\" -replace "\\", "/")
     }
 }
 
