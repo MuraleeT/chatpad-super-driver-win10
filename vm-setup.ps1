@@ -44,11 +44,11 @@ function Install-DevelopmentTools {
         throw "winget is not available. Install/update App Installer, then rerun this script."
     }
 
-    Write-Step "Installing Visual C++ build tools and Windows SDK"
+    Write-Step "Installing Visual Studio 2026 and Windows SDK"
     Invoke-External "winget" @(
-        "install", "--id", "Microsoft.VisualStudio.2022.BuildTools",
+        "install", "--id", "Microsoft.VisualStudio.Community.2026",
         "--exact", "--accept-source-agreements", "--accept-package-agreements",
-        "--override", "--wait --passive --norestart --add Microsoft.VisualStudio.Workload.VCTools;includeRecommended --add Microsoft.VisualStudio.Component.Windows10SDK.26100"
+        "--override", "--wait --passive --norestart --add Microsoft.VisualStudio.Workload.VCTools;includeRecommended --add Microsoft.VisualStudio.Component.Windows10SDK.28000"
     )
 
     Write-Host "The WDK must be installed separately from Microsoft because its package"
@@ -59,6 +59,9 @@ function Install-DevelopmentTools {
 
 function Get-MsBuild {
     $candidates = @(
+        "$env:ProgramFiles\Microsoft Visual Studio\2026\Community\MSBuild\Current\Bin\MSBuild.exe",
+        "$env:ProgramFiles\Microsoft Visual Studio\2026\Professional\MSBuild\Current\Bin\MSBuild.exe",
+        "$env:ProgramFiles\Microsoft Visual Studio\2026\Enterprise\MSBuild\Current\Bin\MSBuild.exe",
         "$env:ProgramFiles\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe",
         "$env:ProgramFiles\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe",
         "D:\Visual Studio 2026\18\Community\MSBuild\Current\Bin\MSBuild.exe"
@@ -74,7 +77,7 @@ function Get-MsBuild {
         }
     }
     if ($null -eq $found -or -not (Test-Path $found)) {
-        throw "MSBuild was not found. Install Visual Studio C++ build tools and rerun."
+        throw "MSBuild was not found. Install Visual Studio 2026 with the Desktop C++ workload and rerun."
     }
     return $found
 }
@@ -136,6 +139,9 @@ function Sync-Repository {
 function Build-Drivers {
     Write-Step "Building drivers (no installation or loading)"
     $msbuild = Get-MsBuild
+    if ($msbuild -match "\\2022\\") {
+        throw "WDK 10.0.28000 requires Visual Studio 2026, but the selected MSBuild is from Visual Studio 2022: $msbuild"
+    }
     $wdk = Get-WdkInfo
     $WdkVersion = $wdk.Version
     $SdkVersion = $wdk.SdkVersion

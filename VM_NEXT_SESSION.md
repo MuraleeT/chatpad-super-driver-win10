@@ -151,6 +151,10 @@ require an interactive install. Optional VM-only setup switches are
 `-CreateTestCertificate` and `-EnableTestSigning`; use those only after taking
 a clean snapshot.
 
+WDK `10.0.28000` requires Visual Studio 2026. Do not use the Visual Studio
+2022 Build Tools with this WDK; the WDK imports may load but its common targets
+will fail during project evaluation.
+
 ## Build Commands
 
 Open a Developer Command Prompt for Visual Studio 2026, then build each project:
