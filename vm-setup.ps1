@@ -59,23 +59,24 @@ function Install-DevelopmentTools {
 }
 
 function Get-MsBuild {
-    $candidates = @(
-        "$env:ProgramFiles\Microsoft Visual Studio\2026\Community\MSBuild\Current\Bin\MSBuild.exe",
-        "$env:ProgramFiles\Microsoft Visual Studio\2026\Professional\MSBuild\Current\Bin\MSBuild.exe",
-        "$env:ProgramFiles\Microsoft Visual Studio\2026\Enterprise\MSBuild\Current\Bin\MSBuild.exe",
-        "$env:ProgramFiles\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe",
-        "$env:ProgramFiles\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe",
-        "D:\Visual Studio 2026\18\Community\MSBuild\Current\Bin\MSBuild.exe"
-    )
-    $found = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
-    if ($null -eq $found) {
-        $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-        if (Test-Path $vswhere) {
-            $installation = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
-            if ($installation) {
-                $found = Join-Path $installation "MSBuild\Current\Bin\MSBuild.exe"
-            }
+    $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+    $found = $null
+    if (Test-Path $vswhere) {
+        $installation = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+        if ($installation) {
+            $found = Join-Path $installation "MSBuild\Current\Bin\MSBuild.exe"
         }
+    }
+    if ($null -eq $found -or -not (Test-Path $found)) {
+        $candidates = @(
+            "$env:ProgramFiles\Microsoft Visual Studio\2026\Community\MSBuild\Current\Bin\MSBuild.exe",
+            "$env:ProgramFiles\Microsoft Visual Studio\2026\Professional\MSBuild\Current\Bin\MSBuild.exe",
+            "$env:ProgramFiles\Microsoft Visual Studio\2026\Enterprise\MSBuild\Current\Bin\MSBuild.exe",
+            "$env:ProgramFiles\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe",
+            "$env:ProgramFiles\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe",
+            "$env:ProgramFiles\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
+        )
+        $found = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
     }
     if ($null -eq $found -or -not (Test-Path $found)) {
         throw "MSBuild was not found. Install Visual Studio 2026 with the Desktop C++ workload and rerun."

@@ -154,6 +154,9 @@ a clean snapshot.
 WDK `10.0.28000` requires Visual Studio 2026. Do not use the Visual Studio
 2022 Build Tools with this WDK; the WDK imports may load but its common targets
 will fail during project evaluation.
+The bootstrap now queries Visual Studio's installed-instance registry with
+`vswhere` before checking fallback paths, so an older VS 2022 installation
+cannot win merely because its fixed path exists.
 
 The VM's winget catalog identifies Visual Studio 2026 Community as
 `Microsoft.VisualStudio.Community` (version 18.11.3). Use that exact ID; do
