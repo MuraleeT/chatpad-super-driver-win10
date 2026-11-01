@@ -129,17 +129,19 @@ function Get-WdkInfo {
     if ($null -eq $versions -or $versions.Count -eq 0) {
         throw "No complete WDK installation was found under $buildRoot. Install the WDK with Visual Studio integration."
     }
-    $libRoot = Join-Path "${env:ProgramFiles(x86)}\Windows Kits\10" "Lib"
-    $sdkPrefix = $versions[0].Name -replace "\.[^.]+$", ""
-    $sdkVersions = @(Get-ChildItem $libRoot -Directory -ErrorAction SilentlyContinue |
-        Where-Object { $_.Name -like "$sdkPrefix.*" } |
+    $kitsRoot = "${env:ProgramFiles(x86)}\Windows Kits\10"
+    $includeRoot = Join-Path $kitsRoot "Include"
+    $sdkVersions = @(Get-ChildItem $includeRoot -Directory -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -match "^\d+\.\d+\.\d+\.\d+$" } |
         Sort-Object Name -Descending)
     if ($sdkVersions.Count -eq 0) {
+        $libRoot = Join-Path $kitsRoot "Lib"
         $sdkVersions = @(Get-ChildItem $libRoot -Directory -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -match "^\d+\.\d+\.\d+\.\d+$" } |
             Sort-Object Name -Descending)
     }
     if ($sdkVersions.Count -eq 0) {
-        throw "No Windows SDK version was found under $libRoot."
+        throw "No Windows SDK version was found under $includeRoot."
     }
     return @{
         Version = $versions[0].Name
