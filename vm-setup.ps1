@@ -10,6 +10,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $WdkVersion = $null
+$WdkContentRoot = $null
 $RepoRoot = $Workspace
 $SourceRoot = Join-Path $RepoRoot "source_release_0_0_4a\source_release_0_0_4a"
 
@@ -77,7 +78,7 @@ function Get-MsBuild {
     return $found
 }
 
-function Get-WdkVersion {
+function Get-WdkInfo {
     $buildRoot = "${env:ProgramFiles(x86)}\Windows Kits\10\build"
     if (-not (Test-Path $buildRoot)) {
         throw "The WDK build directory was not found: $buildRoot"
@@ -92,7 +93,10 @@ function Get-WdkVersion {
     if ($null -eq $versions -or $versions.Count -eq 0) {
         throw "No complete WDK installation was found under $buildRoot. Install the WDK with Visual Studio integration."
     }
-    return $versions[0].Name
+    return @{
+        Version = $versions[0].Name
+        ContentRoot = "${env:ProgramFiles(x86)}\Windows Kits\10\"
+    }
 }
 
 function Sync-Repository {
@@ -118,8 +122,11 @@ function Sync-Repository {
 function Build-Drivers {
     Write-Step "Building drivers (no installation or loading)"
     $msbuild = Get-MsBuild
-    $WdkVersion = Get-WdkVersion
+    $wdk = Get-WdkInfo
+    $WdkVersion = $wdk.Version
+    $WdkContentRoot = $wdk.ContentRoot
     Write-Host "Using installed WDK build folder: $WdkVersion"
+    Write-Host "Using WDK content root: $WdkContentRoot"
     $projects = @(
         "filter\chatpad_filter.vcxproj",
         "chatpad_keyboard_kmdf\chatpad_keyboard_kmdf.vcxproj",
@@ -135,6 +142,7 @@ function Build-Drivers {
                 "/p:Configuration=Debug", "/p:Platform=x64",
                 "/p:WDKBuildFolder=$WdkVersion",
                 "/p:WindowsTargetPlatformVersion=$WdkVersion",
+                "/p:WDKContentRoot=$WdkContentRoot",
                 "/nologo"
             )
         }
