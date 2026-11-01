@@ -10,6 +10,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $WdkVersion = $null
+$SdkVersion = $null
 $WdkContentRoot = $null
 $RepoRoot = $Workspace
 $SourceRoot = Join-Path $RepoRoot "source_release_0_0_4a\source_release_0_0_4a"
@@ -93,8 +94,21 @@ function Get-WdkInfo {
     if ($null -eq $versions -or $versions.Count -eq 0) {
         throw "No complete WDK installation was found under $buildRoot. Install the WDK with Visual Studio integration."
     }
+    $libRoot = Join-Path "${env:ProgramFiles(x86)}\Windows Kits\10" "Lib"
+    $sdkPrefix = $versions[0].Name -replace "\.[^.]+$", ""
+    $sdkVersions = @(Get-ChildItem $libRoot -Directory -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -like "$sdkPrefix.*" } |
+        Sort-Object Name -Descending)
+    if ($sdkVersions.Count -eq 0) {
+        $sdkVersions = @(Get-ChildItem $libRoot -Directory -ErrorAction SilentlyContinue |
+            Sort-Object Name -Descending)
+    }
+    if ($sdkVersions.Count -eq 0) {
+        throw "No Windows SDK version was found under $libRoot."
+    }
     return @{
         Version = $versions[0].Name
+        SdkVersion = $sdkVersions[0].Name
         ContentRoot = ("${env:ProgramFiles(x86)}\Windows Kits\10\" -replace "\\", "/")
     }
 }
@@ -124,8 +138,10 @@ function Build-Drivers {
     $msbuild = Get-MsBuild
     $wdk = Get-WdkInfo
     $WdkVersion = $wdk.Version
+    $SdkVersion = $wdk.SdkVersion
     $WdkContentRoot = $wdk.ContentRoot
     Write-Host "Using installed WDK build folder: $WdkVersion"
+    Write-Host "Using Windows SDK version: $SdkVersion"
     Write-Host "Using WDK content root: $WdkContentRoot"
     $projects = @(
         "filter\chatpad_filter.vcxproj",
@@ -141,7 +157,7 @@ function Build-Drivers {
                 $project, "/m", "/t:Build",
                 "/p:Configuration=Debug", "/p:Platform=x64",
                 "/p:WDKBuildFolder=$WdkVersion",
-                "/p:WindowsTargetPlatformVersion=$WdkVersion",
+                "/p:WindowsTargetPlatformVersion=$SdkVersion",
                 "/p:WDKContentRoot=$WdkContentRoot",
                 "/nologo"
             )

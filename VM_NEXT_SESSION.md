@@ -142,8 +142,9 @@ Set-ExecutionPolicy -Scope Process Bypass
 The default workspace is the script's own folder, so the existing desktop
 checkout is pulled rather than cloning a second copy. The script detects the
 highest complete WDK installation under `Windows Kits\10\build`, passes that
-version and the absolute WDK content root to MSBuild, pulls the `win10-port`
-branch, and builds all five x64 Debug
+version as `WDKBuildFolder`, detects the matching full Windows SDK version for
+`WindowsTargetPlatformVersion`, passes the absolute WDK content root to
+MSBuild, pulls the `win10-port` branch, and builds all five x64 Debug
 projects. It never calls `pnputil`, creates a driver service, or loads a
 `.sys` file. The WDK installer remains a Microsoft prerequisite that may
 require an interactive install. Optional VM-only setup switches are
