@@ -168,7 +168,9 @@ Visual C++ workload is not installed. Run the setup with
 `-InstallPrerequisites`; it uses the verified Community package ID and adds
 the native Visual C++ workload through the installed Visual Studio Installer
 before retrying the build. This avoids treating an already-installed
-Visual Studio package as an upgrade.
+Visual Studio package as an upgrade. The installer uses the documented
+`Microsoft.VisualStudio.Workload.NativeDesktop` Community workload ID; it
+does not request the unavailable `Windows10SDK.28000` component ID.
 
 ## Build Commands
 

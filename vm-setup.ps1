@@ -46,9 +46,8 @@ function Install-DevelopmentTools {
         Invoke-External $vsInstaller @(
             "modify",
             "--installPath", "$env:ProgramFiles\Microsoft Visual Studio\18\Community",
-            "--add", "Microsoft.VisualStudio.Workload.VCTools",
+            "--add", "Microsoft.VisualStudio.Workload.NativeDesktop",
             "--includeRecommended",
-            "--add", "Microsoft.VisualStudio.Component.Windows10SDK.28000",
             "--quiet",
             "--norestart"
         )
@@ -61,7 +60,7 @@ function Install-DevelopmentTools {
         Invoke-External "winget" @(
             "install", "--id", "Microsoft.VisualStudio.Community",
             "--exact", "--accept-source-agreements", "--accept-package-agreements",
-            "--override", "--wait --passive --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --add Microsoft.VisualStudio.Component.Windows10SDK.28000"
+            "--override", "--wait --passive --norestart --add Microsoft.VisualStudio.Workload.NativeDesktop --includeRecommended"
         )
     }
 
