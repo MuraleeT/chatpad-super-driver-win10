@@ -166,7 +166,9 @@ not use the nonexistent `Microsoft.VisualStudio.Community.2026` identifier.
 If the script reports that `Microsoft.Cpp.Default.props` is missing, the
 Visual C++ workload is not installed. Run the setup with
 `-InstallPrerequisites`; it uses the verified Community package ID and adds
-the native Visual C++ workload before retrying the build.
+the native Visual C++ workload through the installed Visual Studio Installer
+before retrying the build. This avoids treating an already-installed
+Visual Studio package as an upgrade.
 
 ## Build Commands
 

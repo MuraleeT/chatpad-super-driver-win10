@@ -40,17 +40,31 @@ function Test-Command([string]$Name) {
 }
 
 function Install-DevelopmentTools {
-    if (-not (Test-Command "winget")) {
-        throw "winget is not available. Install/update App Installer, then rerun this script."
-    }
-
     Write-Step "Installing Visual Studio 2026 and Windows SDK"
-    Invoke-External "winget" @("source", "update")
-    Invoke-External "winget" @(
-        "install", "--id", "Microsoft.VisualStudio.Community",
-        "--exact", "--accept-source-agreements", "--accept-package-agreements",
-        "--override", "--wait --passive --norestart --add Microsoft.VisualStudio.Workload.VCTools;includeRecommended --add Microsoft.VisualStudio.Component.Windows10SDK.28000"
-    )
+    $vsInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\setup.exe"
+    if (Test-Path $vsInstaller) {
+        Invoke-External $vsInstaller @(
+            "modify",
+            "--installPath", "$env:ProgramFiles\Microsoft Visual Studio\18\Community",
+            "--add", "Microsoft.VisualStudio.Workload.VCTools",
+            "--includeRecommended",
+            "--add", "Microsoft.VisualStudio.Component.Windows10SDK.28000",
+            "--quiet",
+            "--norestart",
+            "--wait"
+        )
+    }
+    else {
+        if (-not (Test-Command "winget")) {
+            throw "Neither the Visual Studio Installer nor winget is available."
+        }
+        Invoke-External "winget" @("source", "update")
+        Invoke-External "winget" @(
+            "install", "--id", "Microsoft.VisualStudio.Community",
+            "--exact", "--accept-source-agreements", "--accept-package-agreements",
+            "--override", "--wait --passive --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --add Microsoft.VisualStudio.Component.Windows10SDK.28000"
+        )
+    }
 
     Write-Host "The WDK must be installed separately from Microsoft because its package"
     Write-Host "version and Visual Studio integration must match the SDK."
