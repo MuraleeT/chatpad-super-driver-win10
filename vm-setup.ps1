@@ -60,29 +60,34 @@ function Install-DevelopmentTools {
 
 function Get-MsBuild {
     $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-    $found = $null
+    $installationPath = $null
     if (Test-Path $vswhere) {
-        $installation = & $vswhere -version "[18.0,19.0)" -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
-        if ($installation) {
-            $found = Join-Path $installation "MSBuild\Current\Bin\MSBuild.exe"
+        $installationPath = & $vswhere -version "[18.0,19.0)" -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+        if ($installationPath) {
+            $installationPath = $installationPath.Trim()
         }
     }
-    if ($null -eq $found -or -not (Test-Path $found)) {
-        $candidates = @(
-            "$env:ProgramFiles\Microsoft Visual Studio\2026\Community\MSBuild\Current\Bin\MSBuild.exe",
-            "$env:ProgramFiles\Microsoft Visual Studio\2026\Professional\MSBuild\Current\Bin\MSBuild.exe",
-            "$env:ProgramFiles\Microsoft Visual Studio\2026\Enterprise\MSBuild\Current\Bin\MSBuild.exe",
-            "$env:ProgramFiles\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe",
-            "$env:ProgramFiles\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe",
-            "$env:ProgramFiles\Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe",
-            "D:\Visual Studio 2026\18\Community\MSBuild\Current\Bin\MSBuild.exe"
-        )
-        $found = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if ($null -eq $installationPath -or -not (Test-Path $installationPath)) {
+        $fallback = "D:\Visual Studio 2026\18\Community"
+        if (Test-Path $fallback) {
+            $installationPath = $fallback
+        }
+    }
+    $found = if ($installationPath) {
+        Join-Path $installationPath "MSBuild\Current\Bin\MSBuild.exe"
     }
     if ($null -eq $found -or -not (Test-Path $found)) {
         throw "MSBuild was not found. Install Visual Studio 2026 with the Desktop C++ workload and rerun."
     }
-    return $found
+    $cppProps = Join-Path $installationPath "MSBuild\Microsoft\VC\v180\Microsoft.Cpp.Default.props"
+    if (-not (Test-Path $cppProps)) {
+        throw "Visual Studio 2026 was found at $installationPath, but Microsoft.Cpp.Default.props is missing. Install the Desktop C++ workload."
+    }
+    return @{
+        Path = $found
+        InstallationPath = $installationPath
+        VcTargetsPath = (Join-Path $installationPath "MSBuild\Microsoft\VC\v180")
+    }
 }
 
 function Get-WdkInfo {
@@ -141,7 +146,8 @@ function Sync-Repository {
 
 function Build-Drivers {
     Write-Step "Building drivers (no installation or loading)"
-    $msbuild = Get-MsBuild
+    $msbuildInfo = Get-MsBuild
+    $msbuild = $msbuildInfo.Path
     if ($msbuild -match "\\2022\\") {
         throw "WDK 10.0.28000 requires Visual Studio 2026, but the selected MSBuild is from Visual Studio 2022: $msbuild"
     }
@@ -168,6 +174,7 @@ function Build-Drivers {
                 "/p:WDKBuildFolder=$WdkVersion",
                 "/p:WindowsTargetPlatformVersion=$SdkVersion",
                 "/p:WDKContentRoot=$WdkContentRoot",
+                "/p:VCTargetsPath=$($msbuildInfo.VcTargetsPath)",
                 "/nologo"
             )
         }

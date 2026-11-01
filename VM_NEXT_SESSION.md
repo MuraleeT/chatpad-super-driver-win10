@@ -155,7 +155,8 @@ WDK `10.0.28000` requires Visual Studio 2026. Do not use the Visual Studio
 2022 Build Tools with this WDK; the WDK imports may load but its common targets
 will fail during project evaluation.
 The bootstrap now queries Visual Studio's installed-instance registry with
-`vswhere -version "[18.0,19.0)"` before checking fallback paths, so an older
+`vswhere -version "[18.0,19.0)"` and validates
+`Microsoft.Cpp.Default.props` before building, so an older
 VS 2022 installation cannot win merely because it is the latest registered
 MSBuild instance.
 
