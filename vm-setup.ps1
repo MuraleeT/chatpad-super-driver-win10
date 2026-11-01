@@ -47,7 +47,7 @@ function Install-DevelopmentTools {
     Write-Step "Installing Visual Studio 2026 and Windows SDK"
     Invoke-External "winget" @("source", "update")
     Invoke-External "winget" @(
-        "install", "--id", "Microsoft.VisualStudio.Community.2026",
+        "install", "--id", "Microsoft.VisualStudio.Community",
         "--exact", "--accept-source-agreements", "--accept-package-agreements",
         "--override", "--wait --passive --norestart --add Microsoft.VisualStudio.Workload.VCTools;includeRecommended --add Microsoft.VisualStudio.Component.Windows10SDK.28000"
     )

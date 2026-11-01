@@ -155,10 +155,9 @@ WDK `10.0.28000` requires Visual Studio 2026. Do not use the Visual Studio
 2022 Build Tools with this WDK; the WDK imports may load but its common targets
 will fail during project evaluation.
 
-If winget reports that `Microsoft.VisualStudio.Community.2026` cannot be found,
-run `winget source update` and retry `.\vm-setup.ps1 -InstallPrerequisites`.
-The package identifier is the official Visual Studio 2026 Community identifier;
-the failure means the VM's winget catalog was stale or unavailable.
+The VM's winget catalog identifies Visual Studio 2026 Community as
+`Microsoft.VisualStudio.Community` (version 18.11.3). Use that exact ID; do
+not use the nonexistent `Microsoft.VisualStudio.Community.2026` identifier.
 
 ## Build Commands
 
