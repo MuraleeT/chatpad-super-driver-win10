@@ -59,19 +59,29 @@ function Install-DevelopmentTools {
 }
 
 function Get-MsBuild {
-    $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+    $vswhereCandidates = @(
+        "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe",
+        "$env:ProgramFiles\Microsoft Visual Studio\Installer\vswhere.exe"
+    )
+    $installationCandidates = @(
+        "$env:ProgramFiles\Microsoft Visual Studio\18\Community",
+        "${env:ProgramFiles(x86)}\Microsoft Visual Studio\18\Community",
+        "D:\Visual Studio 2026\18\Community"
+    )
+    $vswhere = $vswhereCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
     $installationPath = $null
     if (Test-Path $vswhere) {
-        $installationPath = & $vswhere -version "[18.0,19.0)" -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+        $installationPath = & $vswhere -version "[18.0,19.0)" -latest -products * -property installationPath |
+            Where-Object { $_ -and (Test-Path $_.Trim()) } |
+            Select-Object -First 1
         if ($installationPath) {
             $installationPath = $installationPath.Trim()
         }
     }
     if ($null -eq $installationPath -or -not (Test-Path $installationPath)) {
-        $fallback = "D:\Visual Studio 2026\18\Community"
-        if (Test-Path $fallback) {
-            $installationPath = $fallback
-        }
+        $installationPath = $installationCandidates |
+            Where-Object { Test-Path (Join-Path $_ "MSBuild\Current\Bin\MSBuild.exe") } |
+            Select-Object -First 1
     }
     $found = if ($installationPath) {
         Join-Path $installationPath "MSBuild\Current\Bin\MSBuild.exe"

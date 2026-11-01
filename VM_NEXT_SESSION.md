@@ -110,10 +110,10 @@ The successful local build used:
 - Visual Studio 2026 Community.
 - Windows SDK `10.0.28000.2526`.
 - WDK `10.0.28000.2526`.
-- MSBuild:
+- MSBuild (the installation path is discovered by `vswhere`):
 
 ```text
-D:\Visual Studio 2026\18\Community\MSBuild\Current\Bin\MSBuild.exe
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe
 ```
 
 - WDK `Inf2Cat`:
@@ -169,7 +169,7 @@ not use the nonexistent `Microsoft.VisualStudio.Community.2026` identifier.
 Open a Developer Command Prompt for Visual Studio 2026, then build each project:
 
 ```bat
-set MSBUILD=D:\Visual Studio 2026\18\Community\MSBuild\Current\Bin\MSBuild.exe
+set MSBUILD=C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe
 
 "%MSBUILD%" source_release_0_0_4a\source_release_0_0_4a\filter\chatpad_filter.vcxproj /m /t:Build /p:Configuration=Debug /p:Platform=x64
 "%MSBUILD%" source_release_0_0_4a\source_release_0_0_4a\chatpad_keyboard_kmdf\chatpad_keyboard_kmdf.vcxproj /m /t:Build /p:Configuration=Debug /p:Platform=x64
