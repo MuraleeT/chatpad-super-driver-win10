@@ -131,24 +131,24 @@ function Get-WdkInfo {
     }
     $kitsRoot = "${env:ProgramFiles(x86)}\Windows Kits\10"
     $includeRoot = Join-Path $kitsRoot "Include"
-    $wdkSdkPrefix = ($versions[0].Name -replace "\.0$", "")
+    $wdkVersion = $versions[0].Name
     $sdkVersions = @(Get-ChildItem $includeRoot -Directory -ErrorAction SilentlyContinue |
         Where-Object {
-            $_.Name -like "$wdkSdkPrefix.*" -and
-            $_.Name -notlike "$wdkSdkPrefix.0"
+            $_.Name -eq $wdkVersion -or
+            ($wdkVersion -match "^(.+)\.0$" -and $_.Name -like "$($Matches[1]).*")
         } |
         Sort-Object Name -Descending)
     if ($sdkVersions.Count -eq 0) {
         $libRoot = Join-Path $kitsRoot "Lib"
         $sdkVersions = @(Get-ChildItem $libRoot -Directory -ErrorAction SilentlyContinue |
             Where-Object {
-                $_.Name -like "$wdkSdkPrefix.*" -and
-                $_.Name -notlike "$wdkSdkPrefix.0"
+                $_.Name -eq $wdkVersion -or
+                ($wdkVersion -match "^(.+)\.0$" -and $_.Name -like "$($Matches[1]).*")
             } |
             Sort-Object Name -Descending)
     }
     if ($sdkVersions.Count -eq 0) {
-        throw "No matching Windows SDK build was found for WDK $($versions[0].Name). Install the SDK/WDK matching package under $includeRoot."
+        throw "No matching Windows SDK build was found for WDK $($versions[0].Name). Install the matching SDK package under $includeRoot."
     }
     return @{
         Version = $versions[0].Name
