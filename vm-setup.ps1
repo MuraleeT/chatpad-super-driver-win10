@@ -132,18 +132,19 @@ function Get-WdkInfo {
     $kitsRoot = "${env:ProgramFiles(x86)}\Windows Kits\10"
     $includeRoot = Join-Path $kitsRoot "Include"
     $wdkVersion = $versions[0].Name
+    $wdkSdkPrefix = if ($wdkVersion -match "^10\.0\.(\d+)\.") { "10.0.$($Matches[1])." } else { "10.0." }
     $sdkVersions = @(Get-ChildItem $includeRoot -Directory -ErrorAction SilentlyContinue |
         Where-Object {
-            $_.Name -eq $wdkVersion -or
-            ($wdkVersion -match "^(.+)\.0$" -and $_.Name -like "$($Matches[1]).*")
+            $_.Name -match "^(\d+\.\d+\.\d+\.\d+)$" -and
+            $_.Name -like "$wdkSdkPrefix*"
         } |
         Sort-Object Name -Descending)
     if ($sdkVersions.Count -eq 0) {
         $libRoot = Join-Path $kitsRoot "Lib"
         $sdkVersions = @(Get-ChildItem $libRoot -Directory -ErrorAction SilentlyContinue |
             Where-Object {
-                $_.Name -eq $wdkVersion -or
-                ($wdkVersion -match "^(.+)\.0$" -and $_.Name -like "$($Matches[1]).*")
+                $_.Name -match "^(\d+\.\d+\.\d+\.\d+)$" -and
+                $_.Name -like "$wdkSdkPrefix*"
             } |
             Sort-Object Name -Descending)
     }
